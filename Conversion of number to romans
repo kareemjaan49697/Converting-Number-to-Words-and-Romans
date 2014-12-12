@@ -1,0 +1,353 @@
+code in window form:
+
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace WindowsFormsApplication1
+{
+    public partial class Form1 : Form
+    {
+        public Form1()
+        {
+            InitializeComponent();
+
+            this.MinimizeBox = false;
+            this.MaximizeBox = false;
+            this.FormBorderStyle = FormBorderStyle.Fixed3D;
+            this.StartPosition = FormStartPosition.CenterScreen;
+            this.Text = "Standard to Roman numbers";
+            this.BackColor = Color.FromArgb(50, 200, 220);
+            //label lblArabic settings
+            lblArabic = new Label();
+            lblArabic.Text = "some number here (1 to 5000)";
+            lblArabic.Font = new Font(lblArabic.Font, FontStyle.Bold);
+            lblArabic.Left = 0;
+            lblArabic.Top = 30;
+            lblArabic.Width = this.ClientRectangle.Width;
+            lblArabic.TextAlign = ContentAlignment.MiddleCenter;
+            lblArabic.Visible = true;
+            this.Controls.Add(lblArabic);
+            //textbox txtArabic settings
+            txtArabic = new TextBox();
+            txtArabic.Width = 40;
+            txtArabic.Left = (this.ClientRectangle.Width - txtArabic.Width) / 2;
+            txtArabic.Top = 60;
+            txtArabic.Font = new Font(txtArabic.Font, FontStyle.Bold);
+            txtArabic.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            txtArabic.MaxLength = 4;
+            txtArabic.KeyPress += new KeyPressEventHandler(txtArabic_KeyPress);
+            txtArabic.Visible = true;
+            this.Controls.Add(txtArabic);
+            //label lblRoman settings
+            lblRoman = new Label();
+            lblRoman.Text = "roman representation";
+            lblRoman.Font = new Font(lblArabic.Font, FontStyle.Bold);
+            lblRoman.Left = 0;
+            lblRoman.Top = 100;
+            lblRoman.Width = this.ClientRectangle.Width;
+            lblRoman.TextAlign = ContentAlignment.MiddleCenter;
+            lblRoman.Visible = true;
+            this.Controls.Add(lblRoman);
+            //textbox txtRoman settings
+            txtRoman = new TextBox();
+            txtRoman.Width = 120;
+            txtRoman.Left = (this.ClientRectangle.Width - txtRoman.Width) / 2;
+            txtRoman.Top = 130;
+            txtRoman.Font = new Font(txtRoman.Font, FontStyle.Bold);
+            txtRoman.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            txtRoman.ReadOnly = true;
+            txtRoman.Visible = true;
+            this.Controls.Add(txtRoman);
+            //button btnOK settings
+            btnOK = new Button();
+            btnOK.Text = "Close";
+            btnOK.FlatStyle = FlatStyle.Flat;
+            btnOK.Left = this.ClientRectangle.Width - btnOK.Width - 10;
+            btnOK.Top = this.ClientRectangle.Height - btnOK.Height - 10;
+            btnOK.Visible = true;
+            //tie the KeyPress event of the button to procedure : btnOK_Click
+            btnOK.Click += new EventHandler(btnOK_Click);
+            this.Controls.Add(btnOK);
+        }
+        protected void txtArabic_KeyPress(object sender, KeyPressEventArgs eArgs)
+        {
+            switch (eArgs.KeyChar)
+            {
+                case '0':
+                case '1':
+                case '2':
+                case '3':
+                case '4':
+                case '5':
+                case '6':
+                case '7':
+                case '8':
+                case '9':
+                //backspace
+                case '\b':
+                    //Handled = false -> that means that we say so Windows : "I haven't handled this event
+                    // so you must handle it." So in this case (if we press the keys '0','1',…,'9' or BackSpace
+                    // Windows will handle this event and as usually will add the symbol to the Text property of the
+                    // txtArabic textbox
+                    eArgs.Handled = false;
+                    if (eArgs.KeyChar == '\b')
+                    {
+                        if (txtArabic.Text.Length - 1 > 0) txtRoman.Text = CalculateRoman(txtArabic.Text.Substring(0, txtArabic.Text.Length - 1));
+                        else txtRoman.Text = "Nothing";
+                    }
+                    else
+                    {
+                        txtRoman.Text = CalculateRoman(txtArabic.Text + eArgs.KeyChar);
+                    }
+                    break;
+                default:
+                    //in all other cases we say that Handled=true. That means that we say to Windows:
+                    //"DO NOT handle this event, I've already handled it!". So here Windows won't add the sybmol
+                    // to the txtArabic.Text property (as if no key is pressed)
+                    eArgs.Handled = true;
+                    break;
+            }
+        }
+        private void btnOK_Click(object sender, EventArgs e)
+        {
+            this.Close();
+        }
+        private string CalculateRoman(string strArabic)
+        {
+            int intArabic;
+            if (strArabic == "") return ("Nothing");
+            try
+            {
+                intArabic = Convert.ToInt32(strArabic);
+                StringBuilder retval = new StringBuilder();
+                if (intArabic < 1 || intArabic > 5000)
+                {
+                    return ("Arabic out of range!");
+                }
+                else
+                {
+                    retval.Append(GenerateNumber(ref intArabic, 1000, 'M'));
+                    retval.Append(GenerateNumber(ref intArabic, 500, 'D'));
+                    retval.Append(GenerateNumber(ref intArabic, 100, 'C'));
+                    retval.Append(GenerateNumber(ref intArabic, 50, 'L'));
+                    retval.Append(GenerateNumber(ref intArabic, 10, 'X'));
+                    retval.Append(GenerateNumber(ref intArabic, 5, 'V'));
+                    retval.Append(GenerateNumber(ref intArabic, 1, 'I'));
+                    //let's replace the some substrings like:
+                    //IIII to IV, VIV to IX, etc.
+                    retval.Replace("IIII", "IV");
+                    retval.Replace("VIV", "IX");
+                    retval.Replace("XXXX", "XL");
+                    retval.Replace("LXL", "XC");
+                    retval.Replace("CCCC", "CD");
+                    retval.Replace("DCD", "CM");
+                    return (retval.ToString());
+
+                }
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.Message);
+                return ("Arabic number not correct!");
+            }
+        }
+        private string GenerateNumber(ref int value, int magnitude, char letter)
+        {
+            StringBuilder numberstring = new StringBuilder();
+            while (value >= magnitude)
+            {
+                value -= magnitude;
+                numberstring.Append(letter);
+            }
+            return (numberstring.ToString());
+        }
+       
+    }
+}
+
+
+
+code in program.cs:
+
+
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+
+namespace WindowsFormsApplication1
+{
+    public partial class Form1 : Form
+    {
+        public Form1()
+        {
+            InitializeComponent();
+
+            this.MinimizeBox = false;
+            this.MaximizeBox = false;
+            this.FormBorderStyle = FormBorderStyle.Fixed3D;
+            this.StartPosition = FormStartPosition.CenterScreen;
+            this.Text = "Standard to Roman numbers";
+            this.BackColor = Color.FromArgb(50, 200, 220);
+            //label lblArabic settings
+            lblArabic = new Label();
+            lblArabic.Text = "some number here (1 to 5000)";
+            lblArabic.Font = new Font(lblArabic.Font, FontStyle.Bold);
+            lblArabic.Left = 0;
+            lblArabic.Top = 30;
+            lblArabic.Width = this.ClientRectangle.Width;
+            lblArabic.TextAlign = ContentAlignment.MiddleCenter;
+            lblArabic.Visible = true;
+            this.Controls.Add(lblArabic);
+            //textbox txtArabic settings
+            txtArabic = new TextBox();
+            txtArabic.Width = 40;
+            txtArabic.Left = (this.ClientRectangle.Width - txtArabic.Width) / 2;
+            txtArabic.Top = 60;
+            txtArabic.Font = new Font(txtArabic.Font, FontStyle.Bold);
+            txtArabic.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            txtArabic.MaxLength = 4;
+            txtArabic.KeyPress += new KeyPressEventHandler(txtArabic_KeyPress);
+            txtArabic.Visible = true;
+            this.Controls.Add(txtArabic);
+            //label lblRoman settings
+            lblRoman = new Label();
+            lblRoman.Text = "roman representation";
+            lblRoman.Font = new Font(lblArabic.Font, FontStyle.Bold);
+            lblRoman.Left = 0;
+            lblRoman.Top = 100;
+            lblRoman.Width = this.ClientRectangle.Width;
+            lblRoman.TextAlign = ContentAlignment.MiddleCenter;
+            lblRoman.Visible = true;
+            this.Controls.Add(lblRoman);
+            //textbox txtRoman settings
+            txtRoman = new TextBox();
+            txtRoman.Width = 120;
+            txtRoman.Left = (this.ClientRectangle.Width - txtRoman.Width) / 2;
+            txtRoman.Top = 130;
+            txtRoman.Font = new Font(txtRoman.Font, FontStyle.Bold);
+            txtRoman.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            txtRoman.ReadOnly = true;
+            txtRoman.Visible = true;
+            this.Controls.Add(txtRoman);
+            //button btnOK settings
+            btnOK = new Button();
+            btnOK.Text = "Close";
+            btnOK.FlatStyle = FlatStyle.Flat;
+            btnOK.Left = this.ClientRectangle.Width - btnOK.Width - 10;
+            btnOK.Top = this.ClientRectangle.Height - btnOK.Height - 10;
+            btnOK.Visible = true;
+            //tie the KeyPress event of the button to procedure : btnOK_Click
+            btnOK.Click += new EventHandler(btnOK_Click);
+            this.Controls.Add(btnOK);
+        }
+        protected void txtArabic_KeyPress(object sender, KeyPressEventArgs eArgs)
+        {
+            switch (eArgs.KeyChar)
+            {
+                case '0':
+                case '1':
+                case '2':
+                case '3':
+                case '4':
+                case '5':
+                case '6':
+                case '7':
+                case '8':
+                case '9':
+                //backspace
+                case '\b':
+                    //Handled = false -> that means that we say so Windows : "I haven't handled this event
+                    // so you must handle it." So in this case (if we press the keys '0','1',…,'9' or BackSpace
+                    // Windows will handle this event and as usually will add the symbol to the Text property of the
+                    // txtArabic textbox
+                    eArgs.Handled = false;
+                    if (eArgs.KeyChar == '\b')
+                    {
+                        if (txtArabic.Text.Length - 1 > 0) txtRoman.Text = CalculateRoman(txtArabic.Text.Substring(0, txtArabic.Text.Length - 1));
+                        else txtRoman.Text = "Nothing";
+                    }
+                    else
+                    {
+                        txtRoman.Text = CalculateRoman(txtArabic.Text + eArgs.KeyChar);
+                    }
+                    break;
+                default:
+                    //in all other cases we say that Handled=true. That means that we say to Windows:
+                    //"DO NOT handle this event, I've already handled it!". So here Windows won't add the sybmol
+                    // to the txtArabic.Text property (as if no key is pressed)
+                    eArgs.Handled = true;
+                    break;
+            }
+        }
+        private void btnOK_Click(object sender, EventArgs e)
+        {
+            this.Close();
+        }
+        private string CalculateRoman(string strArabic)
+        {
+            int intArabic;
+            if (strArabic == "") return ("Nothing");
+            try
+            {
+                intArabic = Convert.ToInt32(strArabic);
+                StringBuilder retval = new StringBuilder();
+                if (intArabic < 1 || intArabic > 5000)
+                {
+                    return ("Arabic out of range!");
+                }
+                else
+                {
+                    retval.Append(GenerateNumber(ref intArabic, 1000, 'M'));
+                    retval.Append(GenerateNumber(ref intArabic, 500, 'D'));
+                    retval.Append(GenerateNumber(ref intArabic, 100, 'C'));
+                    retval.Append(GenerateNumber(ref intArabic, 50, 'L'));
+                    retval.Append(GenerateNumber(ref intArabic, 10, 'X'));
+                    retval.Append(GenerateNumber(ref intArabic, 5, 'V'));
+                    retval.Append(GenerateNumber(ref intArabic, 1, 'I'));
+                    //let's replace the some substrings like:
+                    //IIII to IV, VIV to IX, etc.
+                    retval.Replace("IIII", "IV");
+                    retval.Replace("VIV", "IX");
+                    retval.Replace("XXXX", "XL");
+                    retval.Replace("LXL", "XC");
+                    retval.Replace("CCCC", "CD");
+                    retval.Replace("DCD", "CM");
+                    return (retval.ToString());
+
+                }
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.Message);
+                return ("Arabic number not correct!");
+            }
+        }
+        private string GenerateNumber(ref int value, int magnitude, char letter)
+        {
+            StringBuilder numberstring = new StringBuilder();
+            while (value >= magnitude)
+            {
+                value -= magnitude;
+                numberstring.Append(letter);
+            }
+            return (numberstring.ToString());
+        }
+       
+    }
+}
+
+
+
